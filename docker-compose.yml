@@ -1,0 +1,57 @@
+version: "3"
+networks:
+  lenetmdr:
+    driver: bridge
+services:
+  mysql :
+    image: "mysql:latest"
+    networks:
+      - lenetmdr
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-immo}
+      MYSQL_USER: ${MYSQL_USER:-user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-password}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD:-password}
+    ports:
+      - '3307:3306'
+    volumes:
+      - ./mysql-data:/var/lib/mysql
+      - ./mysql-init:/docker-entrypoint-initdb.d
+
+  api:
+    image: 'canals/php:latest'
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-immo}
+      MYSQL_USER: ${MYSQL_USER:-user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-password}
+    networks:
+      - lenetmdr
+    ports:
+      - '2080:80'
+    volumes:
+      - ./API/public:/var/www/html
+      - ./API:/var/www
+    working_dir: /var/www/
+
+  admin:
+    image: node
+    networks:
+      - lenetmdr
+    ports:
+      - "1080:3000"
+    volumes:
+      - ./Front Admin:/home/node/app
+    working_dir: /home/node/app
+    command: "npm run dev"
+
+  client:
+    image: node
+    networks:
+      - lenetmdr
+    ports:
+      - "1081:3000"
+    volumes:
+      - ./Front Client:/home/node/app
+    working_dir: /home/node/app
+    command: "npm run dev"
